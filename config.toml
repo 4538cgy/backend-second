@@ -1,0 +1,16 @@
+[database]
+driver = "mysql"
+dbName = "vcommerce"
+Id = "vcommerce"
+password = "Abcde!2345"
+ipAddress = "localhost"
+port = 3306
+maxOpenConnection = 10
+maxIdleConnection = 10
+
+[log]
+enable = true
+level = "DEBUG"
+filename = "/vcom/backend-second/log/vcommerce.log"
+maxSize = 100
+maxAge = 7
