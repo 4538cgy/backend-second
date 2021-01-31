@@ -20,20 +20,36 @@ type Database struct {
 
 type LogConfig struct {
 	Enable   bool
+	StdOut   bool
 	Level    string
 	Filename string
 	MaxSize  int
 	MaxAge   int
 }
 
-type Config struct {
-	Log       LogConfig `toml:"log"`
-	LogConfig lumberjack.Logger
-	Database  Database `toml:"database"`
+type Echo struct {
+	Port int
 }
 
+type Api struct {
+	HandleTimeoutMS int
+}
+
+type Config struct {
+	Log       LogConfig `toml:"log"`
+	Database  Database  `toml:"database"`
+	Echo      Echo      `toml:"echo"`
+	Api       Api       `toml:"api"`
+	LogConfig lumberjack.Logger
+}
+
+var conf *Config
+
 func Get() *Config {
-	var conf Config
+	if conf != nil {
+		return conf
+	}
+	conf = &Config{}
 	var configPath string
 	pflag.StringVarP(&configPath, "config", "c", "config.toml", "config file path")
 	pflag.Parse()
@@ -49,5 +65,5 @@ func Get() *Config {
 		Compress: true,
 	}
 	fmt.Printf("configuration: %+v\n", conf)
-	return &conf
+	return conf
 }

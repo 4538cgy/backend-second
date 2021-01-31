@@ -1,6 +1,7 @@
 package main
 
 import (
+	"github.com/4538cgy/backend-second/api"
 	"github.com/4538cgy/backend-second/config"
 	"github.com/4538cgy/backend-second/database"
 	"github.com/4538cgy/backend-second/log"
@@ -24,6 +25,8 @@ func main() {
 	} else {
 		log.Infof("connection ok.. -> %s", dbmgr.DSN())
 	}
+
+	api.StartAPI(cfg, dbmgr)
 
 	sig := make(chan os.Signal, 32)
 	signal.Notify(sig, syscall.SIGINT, syscall.SIGTERM)

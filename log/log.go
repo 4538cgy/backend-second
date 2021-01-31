@@ -2,6 +2,7 @@ package log
 
 import (
 	"github.com/4538cgy/backend-second/config"
+	"os"
 	"time"
 
 	"fmt"
@@ -56,5 +57,9 @@ func Init(cfg *config.Config) {
 	}
 
 	logrus.SetOutput(&cfg.LogConfig)
+	if cfg.Log.StdOut {
+		logrus.SetOutput(os.Stdout)
+	}
+
 	return
 }
