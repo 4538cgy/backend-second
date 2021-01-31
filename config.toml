@@ -4,11 +4,18 @@ dbName = "vcommerce"
 Id = "vcommerce"
 password = "Abcde!2345"
 ipAddress = "localhost"
-port = 3306
+port = 8089
 maxOpenConnection = 10
 maxIdleConnection = 10
 
+[echo]
+port = 8600
+
+[api]
+handleTimeoutMS = 1000
+
 [log]
+stdOut = true
 enable = true
 level = "DEBUG"
 filename = "/vcom/backend-second/log/vcommerce.log"

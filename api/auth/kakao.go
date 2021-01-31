@@ -1,9 +1,9 @@
-package login
+package auth
 
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/4538cgy/backend-second/api"
+	"github.com/4538cgy/backend-second/api/route"
 	"github.com/labstack/echo/v4"
 	"io/ioutil"
 	"net/http"
@@ -29,8 +29,7 @@ type KakaoTokenInfo struct {
 }
 
 func init() {
-	e := api.Echo()
-	e.GET(kakaoAuthUri, login)
+	route.AddRoute(route.NewRouteType(kakaoAuthUri, "GET"), login)
 }
 
 func login(ctx echo.Context) error {
