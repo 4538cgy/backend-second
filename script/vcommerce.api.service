@@ -1,0 +1,13 @@
+[Unit]
+Description=VCommerceAPIServer
+[Service]
+ExecStart=/vcom/backend/api/vcom_api -c /vcom/backend/api/config.toml
+RestartSec=5
+Restart=always
+[Install]
+WantedBy=multi-user.target
+
+
+// place this file to /etc/systemd/system/vcommerce.service
+// sudo systemctl enable vcommerce.service
+// sudo systemctl status vcommerce.service
