@@ -9,6 +9,7 @@ import (
 	"github.com/4538cgy/backend-second/database"
 	"github.com/4538cgy/backend-second/log"
 	"github.com/labstack/echo/v4"
+	"net/http"
 )
 
 type apiManager struct {
@@ -52,6 +53,10 @@ func StartAPI(cfg *config.Config, dbManager database.Manager) {
 			log.Panic("wrong route type: ", routeType)
 		}
 		return true
+	})
+
+	api.echo.GET("/health", func(context echo.Context) error {
+		return context.String(http.StatusOK, "")
 	})
 
 	go func() {

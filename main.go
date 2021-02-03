@@ -1,6 +1,7 @@
 package main
 
 import (
+	_ "github.com/4538cgy/backend-second/admin"
 	"github.com/4538cgy/backend-second/api"
 	"github.com/4538cgy/backend-second/config"
 	"github.com/4538cgy/backend-second/database"

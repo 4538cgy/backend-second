@@ -8,6 +8,6 @@ Restart=always
 WantedBy=multi-user.target
 
 
-// place this file to /etc/systemd/system/vcommerce.service
-// sudo systemctl enable vcommerce.service
-// sudo systemctl status vcommerce.service
+# place this file to /etc/systemd/system/vcommerce.service
+# sudo systemctl enable vcommerce.service
+# sudo systemctl status vcommerce.service
