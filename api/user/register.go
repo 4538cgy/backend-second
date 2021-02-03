@@ -49,13 +49,12 @@ func registerUser(ctx echo.Context) error {
 	defer timer.Stop()
 
 	values := []interface{}{
-		registerUserReq.ExternalAuthKey,
 		registerUserReq.Uid,
 		registerUserReq.DayOfBirth,
 		registerUserReq.ProfileImage,
 		registerUserReq.EmailAddress,
 		registerUserReq.AuthType,
-		"",
+		registerUserReq.Meta,
 	}
 	resultCh := make(chan database.InsertQueryResult)
 
