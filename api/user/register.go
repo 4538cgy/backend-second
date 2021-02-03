@@ -22,6 +22,7 @@ const (
 
 	paramEmail = "email"
 	paramUser  = "id"
+	paramToken = "token"
 )
 
 func init() {
@@ -102,6 +103,13 @@ func checkEmail(ctx echo.Context) error {
 		resp.Detail = vcomError.MessageQueryParamNotfound
 	}
 
+	token := ctx.QueryParam(paramToken)
+	if token == "" {
+		log.Error("no query param.")
+		resp.Status = vcomError.InternalError
+		resp.Detail = vcomError.MessageQueryParamNotfound
+	}
+
 	timer := time.NewTimer(time.Duration(config.Get().Api.HandleTimeoutMS) * time.Second)
 	defer timer.Stop()
 
@@ -148,6 +156,13 @@ func checkUser(ctx echo.Context) error {
 	}
 	userId := ctx.QueryParam(paramUser)
 	if userId == "" {
+		log.Error("no query param.")
+		resp.Status = vcomError.InternalError
+		resp.Detail = vcomError.MessageQueryParamNotfound
+	}
+
+	token := ctx.QueryParam(paramToken)
+	if token == "" {
 		log.Error("no query param.")
 		resp.Status = vcomError.InternalError
 		resp.Detail = vcomError.MessageQueryParamNotfound
