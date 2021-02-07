@@ -10,6 +10,7 @@ import (
 	"github.com/4538cgy/backend-second/log"
 	"github.com/4538cgy/backend-second/protocol"
 	"github.com/4538cgy/backend-second/query"
+	"github.com/4538cgy/backend-second/util"
 	"github.com/labstack/echo/v4"
 	"net/http"
 	"time"
@@ -17,18 +18,17 @@ import (
 
 const (
 	checkEmailUri   = "/api/user/email"
-	checkUserId     = "/api/user/id"
+	checkUserIdUri  = "/api/user/id"
 	registerUserUri = "/api/user"
 
 	paramEmail = "email"
 	paramUser  = "id"
-	paramToken = "token"
 )
 
 func init() {
 	route.AddRoute(route.NewRouteType(registerUserUri, "POST"), registerUser)
 	route.AddRoute(route.NewRouteType(checkEmailUri, "GET"), checkEmail)
-	route.AddRoute(route.NewRouteType(checkUserId, "GET"), checkUser)
+	route.AddRoute(route.NewRouteType(checkUserIdUri, "GET"), checkUserId)
 }
 
 func registerUser(ctx echo.Context) error {
@@ -47,24 +47,21 @@ func registerUser(ctx echo.Context) error {
 		log.Error("failed to bind register user request")
 		resp.Status = vcomError.InternalError
 		resp.Detail = vcomError.MessageBindFailed
+		return ctx.JSON(http.StatusInternalServerError, resp)
 	}
 
 	timer := time.NewTimer(time.Duration(config.Get().Api.HandleTimeoutMS) * time.Second)
 	defer timer.Stop()
 
-	values := []interface{}{
-		registerUserReq.Uid,
-		registerUserReq.DayOfBirth,
-		registerUserReq.ProfileImage,
-		registerUserReq.EmailAddress,
-		registerUserReq.AuthType,
-		registerUserReq.Meta,
-	}
+	// email insert first
 	resultCh := make(chan database.InsertQueryResult)
-
+	values := []interface{}{
+		registerUserReq.EmailAddress,
+	}
 	select {
-	case customContext.InsertQueryWritePump() <- database.NewInsertQuery(query.InsertUserQuery, values, resultCh):
+	case customContext.InsertQueryWritePump() <- database.NewInsertQuery(query.InsertEmail, values, resultCh):
 	case <-timer.C:
+		log.Error("failed to exec query")
 		resp.Status = vcomError.ApiOperationRequestTimeout
 		resp.Detail = vcomError.MessageOperationTimeout
 		return ctx.JSON(http.StatusInternalServerError, resp)
@@ -73,18 +70,124 @@ func registerUser(ctx echo.Context) error {
 	select {
 	case res := <-resultCh:
 		if res.Err != nil {
+			log.Error("database operation failed.")
 			resp.Status = vcomError.DatabaseOperationError
 			resp.Detail = res.Err.Error()
 			return ctx.JSON(http.StatusInternalServerError, resp)
 		}
-		resp.Status = vcomError.QueryResultOk
 
 	case <-timer.C:
+		// TODO rollback needed
+		log.Error("database operation timeout.")
 		resp.Status = vcomError.ApiOperationResponseTimeout
 		resp.Detail = vcomError.MessageOperationTimeout
 		return ctx.JSON(http.StatusInternalServerError, resp)
 	}
-	return nil
+
+	// user id insert
+	resultCh = make(chan database.InsertQueryResult)
+	values = []interface{}{
+		registerUserReq.UserId,
+	}
+	select {
+	case customContext.InsertQueryWritePump() <- database.NewInsertQuery(query.InsertUserID, values, resultCh):
+	case <-timer.C:
+		log.Error("failed to exec query")
+		resp.Status = vcomError.ApiOperationRequestTimeout
+		resp.Detail = vcomError.MessageOperationTimeout
+		return ctx.JSON(http.StatusInternalServerError, resp)
+	}
+
+	select {
+	case res := <-resultCh:
+		if res.Err != nil {
+			log.Error("database operation failed.")
+			resp.Status = vcomError.DatabaseOperationError
+			resp.Detail = res.Err.Error()
+			return ctx.JSON(http.StatusInternalServerError, resp)
+		}
+
+	case <-timer.C:
+		// TODO rollback needed
+		log.Error("database operation timeout.")
+		resp.Status = vcomError.ApiOperationResponseTimeout
+		resp.Detail = vcomError.MessageOperationTimeout
+		return ctx.JSON(http.StatusInternalServerError, resp)
+	}
+
+	// user insert
+	resultCh = make(chan database.InsertQueryResult)
+	values = []interface{}{
+		registerUserReq.UniqueId,
+		registerUserReq.UserId,
+		registerUserReq.DayOfBirth,
+		registerUserReq.ProfileImage,
+		registerUserReq.EmailAddress,
+		registerUserReq.AuthType,
+		registerUserReq.Meta,
+	}
+
+	select {
+	case customContext.InsertQueryWritePump() <- database.NewInsertQuery(query.InsertUser, values, resultCh):
+	case <-timer.C:
+		log.Error("failed to exec query")
+		resp.Status = vcomError.ApiOperationRequestTimeout
+		resp.Detail = vcomError.MessageOperationTimeout
+		return ctx.JSON(http.StatusInternalServerError, resp)
+	}
+
+	select {
+	case res := <-resultCh:
+		if res.Err != nil {
+			log.Error("database operation failed.")
+			resp.Status = vcomError.DatabaseOperationError
+			resp.Detail = res.Err.Error()
+			return ctx.JSON(http.StatusInternalServerError, resp)
+		}
+
+	case <-timer.C:
+		// TODO rollback needed
+		log.Error("database operation timeout.")
+		resp.Status = vcomError.ApiOperationResponseTimeout
+		resp.Detail = vcomError.MessageOperationTimeout
+		return ctx.JSON(http.StatusInternalServerError, resp)
+	}
+
+	resp.Token = util.RandString()
+
+	// insert session
+	values = []interface{}{
+		resp.Token,
+		registerUserReq.UniqueId,
+	}
+	resultCh = make(chan database.InsertQueryResult)
+	select {
+	case customContext.InsertQueryWritePump() <- database.NewInsertQuery(query.InsertSession, values, resultCh):
+	case <-timer.C:
+		log.Error("failed to exec query")
+		resp.Status = vcomError.ApiOperationRequestTimeout
+		resp.Detail = vcomError.MessageOperationTimeout
+		return ctx.JSON(http.StatusInternalServerError, resp)
+	}
+
+	select {
+	case res := <-resultCh:
+		if res.Err != nil {
+			log.Error("database operation failed.")
+			resp.Status = vcomError.DatabaseOperationError
+			resp.Detail = res.Err.Error()
+			return ctx.JSON(http.StatusInternalServerError, resp)
+		}
+
+	case <-timer.C:
+		// TODO rollback needed
+		log.Error("database operation timeout.")
+		resp.Status = vcomError.ApiOperationResponseTimeout
+		resp.Detail = vcomError.MessageOperationTimeout
+		return ctx.JSON(http.StatusInternalServerError, resp)
+	}
+	resp.Status = vcomError.QueryResultOk
+	return ctx.JSON(http.StatusOK, resp)
 }
 
 func checkEmail(ctx echo.Context) error {
@@ -103,20 +206,13 @@ func checkEmail(ctx echo.Context) error {
 		resp.Detail = vcomError.MessageQueryParamNotfound
 	}
 
-	token := ctx.QueryParam(paramToken)
-	if token == "" {
-		log.Error("no query param.")
-		resp.Status = vcomError.InternalError
-		resp.Detail = vcomError.MessageQueryParamNotfound
-	}
-
 	timer := time.NewTimer(time.Duration(config.Get().Api.HandleTimeoutMS) * time.Second)
 	defer timer.Stop()
 
 	result := make(chan database.SelectQueryResult)
 	select {
 	case customContext.SelectQueryWritePump() <- database.NewSelectQuery(
-		fmt.Sprintf("select address from vcommerce.emails where address='%s'", emailAddress),
+		fmt.Sprintf("select email from vcommerce.emails where email='%s' limit 1", emailAddress),
 		result,
 	):
 	case <-timer.C:
@@ -145,7 +241,7 @@ func checkEmail(ctx echo.Context) error {
 	return ctx.JSON(http.StatusOK, resp)
 }
 
-func checkUser(ctx echo.Context) error {
+func checkUserId(ctx echo.Context) error {
 	resp := &protocol.UserIdCheckResponse{}
 	customContext, ok := ctx.(*context.CustomContext)
 	if !ok {
@@ -161,20 +257,13 @@ func checkUser(ctx echo.Context) error {
 		resp.Detail = vcomError.MessageQueryParamNotfound
 	}
 
-	token := ctx.QueryParam(paramToken)
-	if token == "" {
-		log.Error("no query param.")
-		resp.Status = vcomError.InternalError
-		resp.Detail = vcomError.MessageQueryParamNotfound
-	}
-
 	timer := time.NewTimer(time.Duration(config.Get().Api.HandleTimeoutMS) * time.Second)
 	defer timer.Stop()
 
 	result := make(chan database.SelectQueryResult)
 	select {
 	case customContext.SelectQueryWritePump() <- database.NewSelectQuery(
-		fmt.Sprintf("select user_id from vcommerce.user where user_id='%s'", userId),
+		fmt.Sprintf("select user_id from vcommerce.userids where user_id='%s' limit 1", userId),
 		result,
 	):
 	case <-timer.C:
