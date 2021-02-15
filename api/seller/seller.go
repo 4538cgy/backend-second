@@ -1,6 +1,7 @@
 package seller
 
 import (
+	"fmt"
 	"github.com/4538cgy/backend-second/api/context"
 	"github.com/4538cgy/backend-second/api/route"
 	"github.com/4538cgy/backend-second/config"
@@ -10,7 +11,10 @@ import (
 	"github.com/4538cgy/backend-second/protocol"
 	"github.com/4538cgy/backend-second/query"
 	"github.com/labstack/echo/v4"
+	"io"
 	"net/http"
+	"os"
+	"strconv"
 	"time"
 )
 
@@ -39,14 +43,47 @@ func authSeller(ctx echo.Context) error {
 		return ctx.JSON(http.StatusInternalServerError, resp)
 	}
 
+	var err error
 	authSellerRequest := &protocol.SellerAuthRequest{}
-	err := ctx.Bind(authSellerRequest)
+	authSellerRequest.UniqueId = ctx.FormValue("unique_id")
+	authSellerRequest.Token = ctx.FormValue("token")
+	authSellerRequest.SellerType, err = strconv.Atoi(ctx.FormValue("seller_type"))
 	if err != nil {
 		log.Error("failed to bind register user request")
 		resp.Status = vcomError.InternalError
 		resp.Detail = vcomError.MessageBindFailed
+		return ctx.JSON(http.StatusInternalServerError, resp)
 	}
+	authSellerRequest.CompanyRegistrationNumber = ctx.FormValue("company_registration_number")
+	authSellerRequest.CompanyOwnerName = ctx.FormValue("owner_name")
+	authSellerRequest.CompanyName = ctx.FormValue("company_name")
+	authSellerRequest.ChannelName = ctx.FormValue("channel_name")
+	authSellerRequest.ChannelUrl = ctx.FormValue("channel_url")
+	authSellerRequest.ChannelDescription = ctx.FormValue("channel_description")
+	authSellerRequest.BankName = ctx.FormValue("bank_name")
+	authSellerRequest.BankAccountNumber = ctx.FormValue("bank_account_number")
+	file, err := ctx.FormFile("file")
+	if err != nil {
+		return err
+	}
+	src, err := file.Open()
+	if err != nil {
+		return err
+	}
+	defer src.Close()
 
+	filename := fmt.Sprintf(config.Get().Api.SellerUploadFilePath + "/" + authSellerRequest.UniqueId)
+	// Destination
+	dst, err := os.Create(filename) // TODO s3 나 특정 위치로 파일을 옮길 수 있어야 함.
+	if err != nil {
+		return err
+	}
+	defer dst.Close()
+
+	// Copy
+	if _, err = io.Copy(dst, src); err != nil {
+		return err
+	}
 	// TODO check user qualification on redis
 
 	timer := time.NewTimer(time.Duration(config.Get().Api.HandleTimeoutMS) * time.Second)

@@ -15,6 +15,7 @@ install:
 		sudo mkdir -p /vcom/backend
 		sudo mkdir -p /vcom/backend/api
 		sudo mkdir -p /vcom/backend/api/log
+		sudo mkdir -p /vcom/backend/api/download
 		sudo cp -f $(BINARY_NAME) /vcom/backend/api/$(BINARY_NAME)
 test:
 		$(GOTEST) -v ./...

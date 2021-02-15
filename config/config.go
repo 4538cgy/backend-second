@@ -32,7 +32,8 @@ type Echo struct {
 }
 
 type Api struct {
-	HandleTimeoutMS int
+	HandleTimeoutMS      int
+	SellerUploadFilePath string
 }
 
 type Config struct {

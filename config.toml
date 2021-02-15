@@ -13,6 +13,7 @@ port = 8600
 
 [api]
 handleTimeoutMS = 1000
+sellerUploadFilePath = "/vcom/backend/api/download"
 
 [log]
 stdOut = true
