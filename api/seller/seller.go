@@ -72,7 +72,7 @@ func authSeller(ctx echo.Context) error {
 	}
 	defer src.Close()
 
-	filename := fmt.Sprintf(config.Get().Api.SellerUploadFilePath + "/" + authSellerRequest.UniqueId)
+	filename := fmt.Sprintf(config.Get().Api.SellerUploadFilePath + "/" + authSellerRequest.UniqueId + ".pdf")
 	// Destination
 	dst, err := os.Create(filename) // TODO s3 나 특정 위치로 파일을 옮길 수 있어야 함.
 	if err != nil {
