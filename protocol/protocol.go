@@ -45,20 +45,47 @@ type LoginResponse struct {
 	BaseResponse
 }
 
+// formValue
 type SellerAuthRequest struct {
-	UniqueId                  string `json:"unique_id"`                   // firebase token id 혹은 email address
-	Token                     string `json:"token"`                       // login 혹은 user 등록 요청의 응답으로 받은 토큰.
-	SellerType                int    `json:"seller_type"`                 // 개인회원 0, 기업회원 1
-	CompanyRegistrationNumber string `json:"company_registration_number"` // 사업자 등록번호.
-	CompanyOwnerName          string `json:"owner_name"`                  // 사업주 이름
-	CompanyName               string `json:"company_name"`                // 기업체 이름
-	ChannelName               string `json:"channel_name"`                // 채널 이름
-	ChannelUrl                string `json:"channel_url"`                 // 채널 url
-	ChannelDescription        string `json:"channel_description"`         // 채널 설명
-	BankName                  string `json:"bank_name"`                   // 은행 이름
-	BankAccountNumber         string `json:"bank_account_number"`         // 계좌번호
+	UniqueId                  string // `unique_id`: firebase token id 혹은 email address
+	Token                     string // `token`: login 혹은 user 등록 요청의 응답으로 받은 토큰.
+	SellerType                int    // `seller_type`: 개인회원 0, 기업회원 1
+	CompanyRegistrationNumber string // `company_registration_number`: 사업자 등록번호.
+	CompanyOwnerName          string // `owner_name`: 사업주 이름
+	CompanyName               string // `company_name`: 기업체 이름
+	ChannelName               string // `channel_name`: 채널 이름
+	ChannelUrl                string // `channel_url`: 채널 url
+	ChannelDescription        string // `channel_description`: 채널 설명
+	BankName                  string // `bank_name`: 은행 이름
+	BankAccountNumber         string // `bank_account_number`: 계좌번호
 }
 
 type SellerAuthResponse struct {
+	BaseResponse
+}
+
+type VideoInfo struct {
+	Order int    `json:"order"` // 순서
+	Id    string `json:"id"`    // unique id
+	Url   string `json:"url"`   // 업로드 된
+}
+
+type Category struct {
+	Grade int    `json:"grade"`
+	Name  string `json:"name"`
+}
+
+type PostProductRequest struct {
+	UniqueId        string // `unique_id`: firebase token id 혹은 email address
+	Token           string // `token`: login 혹은 user 등록 요청의 응답으로 받은 토큰.
+	Title           string // `title`: 등록 상품 제목
+	VideoIdListJson string // video id list json.
+	CategoryJson    string // `category_info_json`: 카테고리정보
+	BasePrice       int    // `base_price`: 기본 금액
+	BaseAmount      int    // `base_amount`: 기본 개수
+	OptionJson      string // `option_json`: 옵션
+}
+
+type PostProductResponse struct {
 	BaseResponse
 }
