@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/4538cgy/backend-second/api/context"
 	"github.com/4538cgy/backend-second/api/route"
+	_ "github.com/4538cgy/backend-second/api/sale"
 	_ "github.com/4538cgy/backend-second/api/seller"
 	_ "github.com/4538cgy/backend-second/api/user"
 	"github.com/4538cgy/backend-second/config"

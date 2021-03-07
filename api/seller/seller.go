@@ -19,7 +19,7 @@ import (
 )
 
 const (
-	sellerAuth = "/api/sell/auth"
+	sellerAuthUrl = "/api/sale/auth"
 )
 
 type sellerAuthType int
@@ -30,7 +30,7 @@ const (
 )
 
 func init() {
-	route.AddRoute(route.NewRouteType(sellerAuth, "POST"), authSeller)
+	route.AddRoute(route.NewRouteType(sellerAuthUrl, "POST"), authSeller)
 }
 
 func authSeller(ctx echo.Context) error {
@@ -72,14 +72,13 @@ func authSeller(ctx echo.Context) error {
 	}
 	defer src.Close()
 
-	filename := fmt.Sprintf(config.Get().Api.SellerUploadFilePath + "/" + authSellerRequest.UniqueId + ".pdf")
+	filePath := fmt.Sprintf(config.Get().Api.SellerUploadFilePath + "/" + authSellerRequest.UniqueId + ".pdf")
 	// Destination
-	dst, err := os.Create(filename) // TODO s3 나 특정 위치로 파일을 옮길 수 있어야 함.
+	dst, err := os.Create(filePath) // TODO s3 나 특정 위치로 파일을 옮길 수 있어야 함.
 	if err != nil {
 		return err
 	}
 	defer dst.Close()
-
 	// Copy
 	if _, err = io.Copy(dst, src); err != nil {
 		return err
@@ -172,6 +171,7 @@ func authSeller(ctx echo.Context) error {
 		authSellerRequest.ChannelDescription,
 		authSellerRequest.BankName,
 		authSellerRequest.BankAccountNumber,
+		filePath,
 	}
 
 	select {

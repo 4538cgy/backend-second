@@ -13,6 +13,7 @@ const (
 	MessageQueryParamNotfound = "no query param"
 	MessageBindFailed         = "bind failed"
 	MessageInvalidAuthType    = "auth method not supported"
+	MessageFileIoFailed       = "I/O failed"
 )
 
 // Response status detail code
