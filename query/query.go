@@ -11,3 +11,6 @@ const InsertSellerRegistration = "INSERT INTO vcommerce.seller_registration(`uni
 const InsertVideoList = "INSERT INTO vcommerce.video_info(`video_id`, `video_url`, `serve_ready`, `created`, `updated`) VALUES (?, ?, 0, now(), now())"
 const InsertProductCategoryInfo = "INSERT INTO vcommerce.product_category(`product_id`, `category_json`, `created`, `json`) VALUES (?, ?, now(), now())"
 const InsertProductSale = "INSERT INTO vcommerce.product(`product_id`, `unique_id`, `video_list_json`, `title`, `base_price`, `base_amount`, `option_json`, `deleted`, `created`) VALUES (?, ?, ?, ?, ?, ?, ?, 0, now())"
+
+const InsertCart = "INSERT INTO vcommerce.cart(`cart_id`, `unique_id`, `product_id`, `selected_json`, `created`) VALUES (?, ?, ?, ?, now())"
+const DeleteCart = "DELETE FROM vcommerce.cart WHERE cart_id=? AND unique_id=?"

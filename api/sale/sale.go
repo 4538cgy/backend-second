@@ -116,13 +116,13 @@ func postProduct(ctx echo.Context) error {
 
 	// video_info first
 	for _, vinfo := range vinfos.Item {
-		resultCh := make(chan database.InsertQueryResult)
+		resultCh := make(chan database.CudQueryResult)
 		values := []interface{}{
 			vinfo.VideoId,
 			vinfo.VideoUrl,
 		}
 		select {
-		case customContext.InsertQueryWritePump() <- database.NewInsertQuery(query.InsertVideoList, values, resultCh):
+		case customContext.InsertQueryWritePump() <- database.NewCudTransaction(query.InsertVideoList, values, resultCh):
 		case <-timer.C:
 			log.Error("failed to exec query")
 			resp.Status = vcomError.ApiOperationRequestTimeout
@@ -151,13 +151,13 @@ func postProduct(ctx echo.Context) error {
 	// and then product list
 
 	pid := util.RandString()
-	resultCh := make(chan database.InsertQueryResult)
+	resultCh := make(chan database.CudQueryResult)
 	values := []interface{}{
 		pid,
 		categoryJson,
 	}
 	select {
-	case customContext.InsertQueryWritePump() <- database.NewInsertQuery(query.InsertProductCategoryInfo, values, resultCh):
+	case customContext.InsertQueryWritePump() <- database.NewCudTransaction(query.InsertProductCategoryInfo, values, resultCh):
 	case <-timer.C:
 		log.Error("failed to exec query")
 		resp.Status = vcomError.ApiOperationRequestTimeout
@@ -191,7 +191,7 @@ func postProduct(ctx echo.Context) error {
 	}
 
 	// channel registration first
-	resultCh = make(chan database.InsertQueryResult)
+	resultCh = make(chan database.CudQueryResult)
 	values = []interface{}{
 		pid,
 		uniqueId,
@@ -202,7 +202,7 @@ func postProduct(ctx echo.Context) error {
 		optionJson,
 	}
 	select {
-	case customContext.InsertQueryWritePump() <- database.NewInsertQuery(query.InsertProductSale, values, resultCh):
+	case customContext.InsertQueryWritePump() <- database.NewCudTransaction(query.InsertProductSale, values, resultCh):
 	case <-timer.C:
 		log.Error("failed to exec query")
 		resp.Status = vcomError.ApiOperationRequestTimeout
