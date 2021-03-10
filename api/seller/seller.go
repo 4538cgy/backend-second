@@ -89,12 +89,12 @@ func authSeller(ctx echo.Context) error {
 	defer timer.Stop()
 
 	// channel registration first
-	resultCh := make(chan database.InsertQueryResult)
+	resultCh := make(chan database.CudQueryResult)
 	values := []interface{}{
 		authSellerRequest.ChannelName,
 	}
 	select {
-	case customContext.InsertQueryWritePump() <- database.NewInsertQuery(query.InsertSellerChannel, values, resultCh):
+	case customContext.InsertQueryWritePump() <- database.NewCudTransaction(query.InsertSellerChannel, values, resultCh):
 	case <-timer.C:
 		log.Error("failed to exec query")
 		resp.Status = vcomError.ApiOperationRequestTimeout
@@ -120,7 +120,7 @@ func authSeller(ctx echo.Context) error {
 	}
 
 	// channel registration
-	resultCh = make(chan database.InsertQueryResult)
+	resultCh = make(chan database.CudQueryResult)
 	authProgress := sellerWaitAuthentication
 	if authSellerRequest.SellerType == 0 {
 		authProgress = sellerAuthenticated
@@ -131,7 +131,7 @@ func authSeller(ctx echo.Context) error {
 	}
 
 	select {
-	case customContext.InsertQueryWritePump() <- database.NewInsertQuery(query.InsertSellerRegistration, values, resultCh):
+	case customContext.InsertQueryWritePump() <- database.NewCudTransaction(query.InsertSellerRegistration, values, resultCh):
 	case <-timer.C:
 		log.Error("failed to exec query")
 		resp.Status = vcomError.ApiOperationRequestTimeout
@@ -159,7 +159,7 @@ func authSeller(ctx echo.Context) error {
 	// TODO 개인회원의 계좌정보 일치 확인 필요.
 	// TODO 법인회원 정보 확인.
 	// channel auth
-	resultCh = make(chan database.InsertQueryResult)
+	resultCh = make(chan database.CudQueryResult)
 	values = []interface{}{
 		authSellerRequest.UniqueId,
 		authSellerRequest.SellerType,
@@ -175,7 +175,7 @@ func authSeller(ctx echo.Context) error {
 	}
 
 	select {
-	case customContext.InsertQueryWritePump() <- database.NewInsertQuery(query.InsertSellerAuth, values, resultCh):
+	case customContext.InsertQueryWritePump() <- database.NewCudTransaction(query.InsertSellerAuth, values, resultCh):
 	case <-timer.C:
 		log.Error("failed to exec query")
 		resp.Status = vcomError.ApiOperationRequestTimeout

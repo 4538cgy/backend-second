@@ -54,12 +54,12 @@ func registerUser(ctx echo.Context) error {
 	defer timer.Stop()
 
 	// email insert first
-	resultCh := make(chan database.InsertQueryResult)
+	resultCh := make(chan database.CudQueryResult)
 	values := []interface{}{
 		registerUserReq.EmailAddress,
 	}
 	select {
-	case customContext.InsertQueryWritePump() <- database.NewInsertQuery(query.InsertEmail, values, resultCh):
+	case customContext.InsertQueryWritePump() <- database.NewCudTransaction(query.InsertEmail, values, resultCh):
 	case <-timer.C:
 		log.Error("failed to exec query")
 		resp.Status = vcomError.ApiOperationRequestTimeout
@@ -85,12 +85,12 @@ func registerUser(ctx echo.Context) error {
 	}
 
 	// user id insert
-	resultCh = make(chan database.InsertQueryResult)
+	resultCh = make(chan database.CudQueryResult)
 	values = []interface{}{
 		registerUserReq.UserId,
 	}
 	select {
-	case customContext.InsertQueryWritePump() <- database.NewInsertQuery(query.InsertUserID, values, resultCh):
+	case customContext.InsertQueryWritePump() <- database.NewCudTransaction(query.InsertUserID, values, resultCh):
 	case <-timer.C:
 		log.Error("failed to exec query")
 		resp.Status = vcomError.ApiOperationRequestTimeout
@@ -116,7 +116,7 @@ func registerUser(ctx echo.Context) error {
 	}
 
 	// user insert
-	resultCh = make(chan database.InsertQueryResult)
+	resultCh = make(chan database.CudQueryResult)
 	values = []interface{}{
 		registerUserReq.UniqueId,
 		registerUserReq.UserId,
@@ -128,7 +128,7 @@ func registerUser(ctx echo.Context) error {
 	}
 
 	select {
-	case customContext.InsertQueryWritePump() <- database.NewInsertQuery(query.InsertUser, values, resultCh):
+	case customContext.InsertQueryWritePump() <- database.NewCudTransaction(query.InsertUser, values, resultCh):
 	case <-timer.C:
 		log.Error("failed to exec query")
 		resp.Status = vcomError.ApiOperationRequestTimeout
@@ -160,9 +160,9 @@ func registerUser(ctx echo.Context) error {
 		resp.Token,
 		registerUserReq.UniqueId,
 	}
-	resultCh = make(chan database.InsertQueryResult)
+	resultCh = make(chan database.CudQueryResult)
 	select {
-	case customContext.InsertQueryWritePump() <- database.NewInsertQuery(query.InsertSession, values, resultCh):
+	case customContext.InsertQueryWritePump() <- database.NewCudTransaction(query.InsertSession, values, resultCh):
 	case <-timer.C:
 		log.Error("failed to exec query")
 		resp.Status = vcomError.ApiOperationRequestTimeout
@@ -211,7 +211,7 @@ func checkEmail(ctx echo.Context) error {
 
 	result := make(chan database.SelectQueryResult)
 	select {
-	case customContext.SelectQueryWritePump() <- database.NewSelectQuery(
+	case customContext.SelectQueryWritePump() <- database.NewSelectTransaction(
 		fmt.Sprintf("select email from vcommerce.emails where email='%s' limit 1", emailAddress),
 		result,
 	):
@@ -262,7 +262,7 @@ func checkUserId(ctx echo.Context) error {
 
 	result := make(chan database.SelectQueryResult)
 	select {
-	case customContext.SelectQueryWritePump() <- database.NewSelectQuery(
+	case customContext.SelectQueryWritePump() <- database.NewSelectTransaction(
 		fmt.Sprintf("select user_id from vcommerce.userids where user_id='%s' limit 1", userId),
 		result,
 	):

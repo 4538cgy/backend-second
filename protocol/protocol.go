@@ -89,3 +89,24 @@ type PostProductRequest struct {
 type PostProductResponse struct {
 	BaseResponse
 }
+
+type CartItemAddRequest struct {
+	UniqueId     string // `unique_id`: firebase token id 혹은 email address
+	Token        string // `token`: login 혹은 user 등록 요청의 응답으로 받은 토큰
+	ProductId    string // `product_id`: 카트에 담을 제품의 product id
+	SelectedJson string // `selected_json`: 구매할 옵션 리스트
+}
+
+type CartItemAddResponse struct {
+	BaseResponse
+}
+
+type CartItemRemoveRequest struct {
+	UniqueId string // `unique_id`: firebase token id 혹은 email address
+	Token    string // `token`: login 혹은 user 등록 요청의 응답으로 받은 토큰
+	CartId   string // `cart_id`: 삭제할 cart 아이템의 id
+}
+
+type CartItemRemoveResponse struct {
+	BaseResponse
+}

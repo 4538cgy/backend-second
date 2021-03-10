@@ -17,31 +17,31 @@ type SelectQueryResult struct {
 	Rows *sql.Rows
 }
 
-type selectQueryTx struct {
+type selectTransaction struct {
 	selectQuery string
 	resultCh    chan<- SelectQueryResult
 }
 
-func NewSelectQuery(query string, ch chan<- SelectQueryResult) selectQueryTx {
-	return selectQueryTx{
+func NewSelectTransaction(query string, ch chan<- SelectQueryResult) selectTransaction {
+	return selectTransaction{
 		selectQuery: query,
 		resultCh:    ch,
 	}
 }
 
-type InsertQueryResult struct {
+type CudQueryResult struct {
 	Err    error
 	Result sql.Result
 }
 
-type insertQueryTx struct {
+type cudTransaction struct {
 	insertQuery string
 	args        []interface{}
-	resultCh    chan<- InsertQueryResult
+	resultCh    chan<- CudQueryResult
 }
 
-func NewInsertQuery(query string, args []interface{}, ch chan<- InsertQueryResult) insertQueryTx {
-	return insertQueryTx{
+func NewCudTransaction(query string, args []interface{}, ch chan<- CudQueryResult) cudTransaction {
+	return cudTransaction{
 		insertQuery: query,
 		args:        args,
 		resultCh:    ch,
@@ -51,15 +51,15 @@ func NewInsertQuery(query string, args []interface{}, ch chan<- InsertQueryResul
 type manager struct {
 	conf               *config.Config
 	db                 *sql.DB
-	selectQueryWriteCh chan selectQueryTx
-	insertQueryWriteCh chan insertQueryTx
+	selectQueryWriteCh chan selectTransaction
+	insertQueryWriteCh chan cudTransaction
 }
 
 type Manager interface {
 	Connect() error
 	DSN() string
-	SelectQueryWritePump() chan<- selectQueryTx
-	InsertQueryWritePump() chan<- insertQueryTx
+	SelectQueryWritePump() chan<- selectTransaction
+	InsertQueryWritePump() chan<- cudTransaction
 }
 
 func NewDBManager(cfg *config.Config) (Manager, error) {
@@ -70,8 +70,8 @@ func NewDBManager(cfg *config.Config) (Manager, error) {
 	}
 	manager := manager{
 		conf:               cfg,
-		selectQueryWriteCh: make(chan selectQueryTx, dbQueryPumpChannelBufferSize),
-		insertQueryWriteCh: make(chan insertQueryTx, dbQueryPumpChannelBufferSize),
+		selectQueryWriteCh: make(chan selectTransaction, dbQueryPumpChannelBufferSize),
+		insertQueryWriteCh: make(chan cudTransaction, dbQueryPumpChannelBufferSize),
 	}
 	return &manager, nil
 }
@@ -100,11 +100,11 @@ func (m *manager) Connect() error {
 	return nil
 }
 
-func (m *manager) SelectQueryWritePump() chan<- selectQueryTx {
+func (m *manager) SelectQueryWritePump() chan<- selectTransaction {
 	return m.selectQueryWriteCh
 }
 
-func (m *manager) InsertQueryWritePump() chan<- insertQueryTx {
+func (m *manager) InsertQueryWritePump() chan<- cudTransaction {
 	return m.insertQueryWriteCh
 }
 
@@ -144,20 +144,20 @@ func (m *manager) writePump() {
 			log.Debug("insertQuery: ", query)
 			stmt, err := m.db.Prepare(query.insertQuery)
 			if err != nil {
-				query.resultCh <- InsertQueryResult{
+				query.resultCh <- CudQueryResult{
 					Err: err,
 				}
 				continue
 			}
 			res, err := stmt.Exec(query.args...)
 			if err != nil {
-				query.resultCh <- InsertQueryResult{
+				query.resultCh <- CudQueryResult{
 					Err: err,
 				}
 				continue
 			}
 			log.Debug("Query success. res: ", res)
-			query.resultCh <- InsertQueryResult{
+			query.resultCh <- CudQueryResult{
 				Result: res,
 			}
 		}
