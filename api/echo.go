@@ -52,7 +52,7 @@ func StartAPI(cfg *config.Config, dbManager database.Manager) {
 			log.Infof("DELETE: %s", routeUri)
 			api.echo.DELETE(routeUri, fun)
 		default:
-			log.Panic("wrong route type: ", routeType)
+			log.Panic("wrong route types: ", routeType)
 		}
 		return true
 	})

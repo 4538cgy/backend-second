@@ -64,29 +64,7 @@ type SellerAuthResponse struct {
 	BaseResponse
 }
 
-type VideoInfo struct {
-	Order int    `json:"order"` // 순서
-	Id    string `json:"id"`    // unique id
-	Url   string `json:"url"`   // 업로드 된
-}
-
-type Category struct {
-	Grade int    `json:"grade"`
-	Name  string `json:"name"`
-}
-
-type PostProductRequest struct {
-	UniqueId        string // `unique_id`: firebase token id 혹은 email address
-	Token           string // `token`: login 혹은 user 등록 요청의 응답으로 받은 토큰.
-	Title           string // `title`: 등록 상품 제목
-	VideoIdListJson string // video id list json.
-	CategoryJson    string // `category_info_json`: 카테고리정보
-	BasePrice       int    // `base_price`: 기본 금액
-	BaseAmount      int    // `base_amount`: 기본 개수
-	OptionJson      string // `option_json`: 옵션
-}
-
-type PostProductResponse struct {
+type ProductPostResponse struct {
 	BaseResponse
 }
 
@@ -108,5 +86,9 @@ type CartItemRemoveRequest struct {
 }
 
 type CartItemRemoveResponse struct {
+	BaseResponse
+}
+
+type ReviewPostResponse struct {
 	BaseResponse
 }

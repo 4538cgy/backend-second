@@ -1,4 +1,4 @@
-package sale
+package review
 
 import (
 	"encoding/json"
@@ -21,14 +21,14 @@ import (
 )
 
 const (
-	sellProductUrl = "/api/sale/product"
+	reviewUrl = "/api/review"
 )
 
 func init() {
-	route.AddRoute(route.NewRouteType(sellProductUrl, "POST"), postProduct)
+	route.AddRoute(route.NewRouteType(reviewUrl, "POST"), postReview)
 }
 
-func postProduct(ctx echo.Context) error {
+func postReview(ctx echo.Context) error {
 	resp := &protocol.ProductPostResponse{}
 	customContext, ok := ctx.(*context.CustomContext)
 	if !ok {
@@ -38,22 +38,18 @@ func postProduct(ctx echo.Context) error {
 		return ctx.JSON(http.StatusInternalServerError, resp)
 	}
 
+	reviewId := util.RandString()
 	uniqueId := ctx.FormValue("unique_id")
-	// token := ctx.FormValue("token")
+	token := ctx.FormValue("token")
+	log.Info("token: ", token)
 	// TODO token validation check
-	title := ctx.FormValue("title")
-	categoryJson := ctx.FormValue("category_info_json")
-	optionJson := ctx.FormValue("option_json")
-	basePrice, err := strconv.Atoi(ctx.FormValue("base_price"))
+	productId := ctx.FormValue("product_id")
+	thumbsUpAndDown := util.RandString()
+	log.Info("ThumbsUpAndDown ID: ", thumbsUpAndDown) // TODO Redis 등록
+	bodyMessage := ctx.FormValue("body")
+	starScore, err := strconv.Atoi(ctx.FormValue("star")) // 별점
 	if err != nil {
-		log.Error("data invalid. err: ", err.Error(), ", base_price: ", ctx.FormValue("base_price"))
-		resp.Status = vcomError.InternalError
-		resp.Detail = vcomError.MessageUnknownError
-		return ctx.JSON(http.StatusInternalServerError, resp)
-	}
-	baseAmount, err := strconv.Atoi(ctx.FormValue("base_amount"))
-	if err != nil {
-		log.Error("data invalid. err: ", err.Error(), ", base_amount: ", ctx.FormValue("base_amount"))
+		log.Error("data invalid. err: ", err.Error(), ",  startScore: ", ctx.FormValue("star"))
 		resp.Status = vcomError.InternalError
 		resp.Detail = vcomError.MessageUnknownError
 		return ctx.JSON(http.StatusInternalServerError, resp)
@@ -63,12 +59,12 @@ func postProduct(ctx echo.Context) error {
 	if err != nil {
 		return err
 	}
-	videos := form.File["files"]
+	medias := form.File["files"]
 	mediaIndices := types.MediaIndices{MediaIds: make([]string, 0)}
 	mediaInfos := types.MediaInfos{Item: make([]types.MediaInfo, 0)}
 
-	// TODO S3로 옮기자.
-	for _, file := range videos {
+	// TODO S3로 옮기자. 이미지의 경우 s3로 바로 올리고, 동영상의 경우 hls 변환 후 s3로 올리자.
+	for _, file := range medias {
 		// Source
 		src, err := file.Open()
 		if err != nil {
@@ -91,6 +87,7 @@ func postProduct(ctx echo.Context) error {
 		}
 		id := util.RandString()
 		mediaInfos.Item = append(mediaInfos.Item, types.MediaInfo{
+			Kind:     types.VideoType.String(), // TODO 확장자 보고 type 설정해서 넣읍시다.
 			MediaId:  id,
 			MediaUrl: "", // TODO url 미리 생성해서 넘기도록 합시다.
 		})
@@ -102,11 +99,11 @@ func postProduct(ctx echo.Context) error {
 	defer timer.Stop()
 
 	// video_info first
-	for _, vinfo := range mediaInfos.Item {
+	for _, media := range mediaInfos.Item {
 		resultCh := make(chan database.CudQueryResult)
 		values := []interface{}{
-			vinfo.MediaId,
-			vinfo.MediaUrl,
+			media.MediaId,
+			media.MediaUrl,
 		}
 		select {
 		case customContext.InsertQueryWritePump() <- database.NewCudTransaction(query.InsertVideoList, values, resultCh):
@@ -135,61 +132,26 @@ func postProduct(ctx echo.Context) error {
 		}
 
 	}
-	// and then product list
 
-	pid := util.RandString()
-	resultCh := make(chan database.CudQueryResult)
-	values := []interface{}{
-		pid,
-		categoryJson,
-	}
-	select {
-	case customContext.InsertQueryWritePump() <- database.NewCudTransaction(query.InsertProductCategoryInfo, values, resultCh):
-	case <-timer.C:
-		log.Error("failed to exec query")
-		resp.Status = vcomError.ApiOperationRequestTimeout
-		resp.Detail = vcomError.MessageOperationTimeout
-		return ctx.JSON(http.StatusInternalServerError, resp)
-	}
-
-	select {
-	case res := <-resultCh:
-		if res.Err != nil {
-			log.Error("database operation failed.")
-			resp.Status = vcomError.DatabaseOperationError
-			resp.Detail = res.Err.Error()
-			return ctx.JSON(http.StatusInternalServerError, resp)
-		}
-
-	case <-timer.C:
-		// TODO rollback needed
-		log.Error("database operation timeout.")
-		resp.Status = vcomError.ApiOperationResponseTimeout
-		resp.Detail = vcomError.MessageOperationTimeout
-		return ctx.JSON(http.StatusInternalServerError, resp)
-	}
-
-	// and finally, product
-	videoIds, err := json.Marshal(&mediaIndices)
+	mediaInfoJson, err := json.Marshal(&mediaIndices)
 	if err != nil {
 		resp.Status = vcomError.InternalError
 		resp.Detail = vcomError.MessageUnknownError
 		return ctx.JSON(http.StatusInternalServerError, resp)
 	}
-
 	// channel registration first
-	resultCh = make(chan database.CudQueryResult)
-	values = []interface{}{
-		pid,
+	resultCh := make(chan database.CudQueryResult)
+	values := []interface{}{
+		reviewId,
+		productId,
 		uniqueId,
-		string(videoIds),
-		title,
-		basePrice,
-		baseAmount,
-		optionJson,
+		thumbsUpAndDown,
+		bodyMessage,
+		string(mediaInfoJson),
+		starScore,
 	}
 	select {
-	case customContext.InsertQueryWritePump() <- database.NewCudTransaction(query.InsertProductSale, values, resultCh):
+	case customContext.InsertQueryWritePump() <- database.NewCudTransaction(query.InsertReview, values, resultCh):
 	case <-timer.C:
 		log.Error("failed to exec query")
 		resp.Status = vcomError.ApiOperationRequestTimeout
