@@ -14,3 +14,5 @@ const InsertProductSale = "INSERT INTO vcommerce.product(`product_id`, `unique_i
 
 const InsertCart = "INSERT INTO vcommerce.cart(`cart_id`, `unique_id`, `product_id`, `selected_json`, `created`) VALUES (?, ?, ?, ?, now())"
 const DeleteCart = "DELETE FROM vcommerce.cart WHERE cart_id=? AND unique_id=?"
+
+const InsertReview = "INSERT INTO vcommerce.review(`review_id`, `product_id`, `unique_id`, `thumb_up_down_id`, `body`, `media_info_json`, `star`, `created`, `updated`) VALUES(?, ?, ?, ?, ?, ?, ?, now(), now())"
