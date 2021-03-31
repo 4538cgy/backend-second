@@ -12,7 +12,10 @@ import (
 	"github.com/4538cgy/backend-second/query"
 	"github.com/4538cgy/backend-second/util"
 	"github.com/labstack/echo/v4"
+	"io"
 	"net/http"
+	"os"
+	"path/filepath"
 	"time"
 )
 
@@ -41,22 +44,20 @@ func registerUser(ctx echo.Context) error {
 		return ctx.JSON(http.StatusInternalServerError, resp)
 	}
 
-	registerUserReq := &protocol.RegisterUserRequest{}
-	err := ctx.Bind(registerUserReq)
-	if err != nil {
-		log.Error("failed to bind register user request")
-		resp.Status = vcomError.InternalError
-		resp.Detail = vcomError.MessageBindFailed
-		return ctx.JSON(http.StatusInternalServerError, resp)
-	}
-
+	uniqueId := ctx.FormValue("unique_id")
+	userId := ctx.FormValue("user_id")
+	emailAddress := ctx.FormValue("email")
+	cellPhoneNumber := ctx.FormValue("cell_phone_number")
+	dayOfBirth := ctx.FormValue("day_of_birth")
+	auth := ctx.FormValue("auth")
+	meta := ctx.FormValue("meta")
 	timer := time.NewTimer(time.Duration(config.Get().Api.HandleTimeoutMS) * time.Second)
 	defer timer.Stop()
 
 	// email insert first
 	resultCh := make(chan database.CudQueryResult)
 	values := []interface{}{
-		registerUserReq.EmailAddress,
+		emailAddress,
 	}
 	select {
 	case customContext.InsertQueryWritePump() <- database.NewCudTransaction(query.InsertEmail, values, resultCh):
@@ -87,7 +88,7 @@ func registerUser(ctx echo.Context) error {
 	// user id insert
 	resultCh = make(chan database.CudQueryResult)
 	values = []interface{}{
-		registerUserReq.UserId,
+		userId,
 	}
 	select {
 	case customContext.InsertQueryWritePump() <- database.NewCudTransaction(query.InsertUserID, values, resultCh):
@@ -115,16 +116,47 @@ func registerUser(ctx echo.Context) error {
 		return ctx.JSON(http.StatusInternalServerError, resp)
 	}
 
+	// save file
+	file, err := ctx.FormFile("file")
+	if err != nil {
+		log.Error("FormFile failed. err: ", err)
+		return err
+	}
+	src, err := file.Open()
+	if err != nil {
+		log.Error("File Open failed. err: ", err)
+		return err
+	}
+	defer src.Close()
+
+	ext := filepath.Ext(file.Filename)
+	filePath := fmt.Sprintf(config.Get().Asset.UserProfileImageSavePath + "/" + uniqueId + ext)
+	// Destination
+	dst, err := os.Create(filePath) // TODO s3 나 특정 위치로 파일을 옮길 수 있어야 함.
+	if err != nil {
+		log.Error("File Create failed. err: ", err)
+		return err
+	}
+	defer dst.Close()
+	// Copy
+	if _, err = io.Copy(dst, src); err != nil {
+		log.Error("File Copy failed. err: ", err)
+		return err
+	}
+
+	profileImagePath := "/asset/profile/" + uniqueId + ext
+	log.Info("file saved: ", filePath)
 	// user insert
 	resultCh = make(chan database.CudQueryResult)
 	values = []interface{}{
-		registerUserReq.UniqueId,
-		registerUserReq.UserId,
-		registerUserReq.DayOfBirth,
-		registerUserReq.ProfileImage,
-		registerUserReq.EmailAddress,
-		registerUserReq.AuthType,
-		registerUserReq.Meta,
+		uniqueId,
+		userId,
+		dayOfBirth,
+		cellPhoneNumber,
+		profileImagePath,
+		emailAddress,
+		auth,
+		meta,
 	}
 
 	select {
@@ -158,7 +190,7 @@ func registerUser(ctx echo.Context) error {
 	// insert session
 	values = []interface{}{
 		resp.Token,
-		registerUserReq.UniqueId,
+		uniqueId,
 	}
 	resultCh = make(chan database.CudQueryResult)
 	select {

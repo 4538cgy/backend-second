@@ -61,6 +61,9 @@ func StartAPI(cfg *config.Config, dbManager database.Manager) {
 		return context.String(http.StatusOK, "")
 	})
 
+	fs := http.FileServer(http.Dir(cfg.Asset.UserProfileImageSavePath))
+	api.echo.GET("/assets/profile/*", echo.WrapHandler(http.StripPrefix("/assets/profile", fs)))
+
 	go func() {
 		address := fmt.Sprintf(":%d", api.config.Echo.Port)
 		log.Fatal(api.echo.Start(address))

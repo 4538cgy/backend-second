@@ -36,11 +36,16 @@ type Api struct {
 	SellerUploadFilePath string
 }
 
+type Asset struct {
+	UserProfileImageSavePath string
+}
+
 type Config struct {
 	Log       LogConfig `toml:"log"`
 	Database  Database  `toml:"database"`
 	Echo      Echo      `toml:"echo"`
 	Api       Api       `toml:"api"`
+	Asset     Asset     `toml:"asset"`
 	LogConfig lumberjack.Logger
 }
 

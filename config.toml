@@ -15,6 +15,9 @@ port = 8600
 handleTimeoutMS = 1000
 sellerUploadFilePath = "/vcom/backend/api/download"
 
+[asset]
+userProfileImageSavePath = "/vcom/backend/asset/profile"
+
 [log]
 stdOut = true
 enable = true
