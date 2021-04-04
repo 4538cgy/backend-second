@@ -12,7 +12,7 @@ const (
 	MessageUnknownError       = "unknown error message"
 	MessageQueryParamNotfound = "no query param"
 	MessageBindFailed         = "bind failed"
-	MessageInvalidAuthType    = "auth method not supported"
+	MessageUserNotRegistered  = "not registered user"
 	MessageFileIoFailed       = "I/O failed"
 )
 
@@ -25,12 +25,17 @@ const (
 	EmailCheckErrorBeingUsed = 2
 	// userid check
 	UserIdCheckErrorBeingUsed = 3
+
 	// login or create account
-	InvalidAuthType = 4
-	UserNotFound    = 5
+	InvalidAuthType = 5
+	UserNotFound    = 6
 
 	ApiOperationRequestTimeout  = 300
 	ApiOperationResponseTimeout = 301
 
 	DatabaseOperationError = 1000
+
+	FirebaseTokenCreateFailed = 2000
+	FirebaseAuthFailed        = 2001
+	FirebaseVerifyTokenFailed = 2002
 )
