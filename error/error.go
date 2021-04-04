@@ -36,6 +36,6 @@ const (
 	DatabaseOperationError = 1000
 
 	FirebaseTokenCreateFailed = 2000
-	FirebaseAuthFailed        = 2001
-	FirebaseVerifyTokenFailed = 2002
+	FirebaseVerifyTokenFailed = 2001
+	FirebaseUserInfoFailed    = 2002
 )
