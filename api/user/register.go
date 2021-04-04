@@ -128,12 +128,16 @@ func registerUser(ctx echo.Context) error {
 	file, err := ctx.FormFile("file")
 	if err != nil {
 		log.Error("FormFile failed. err: ", err)
-		return err
+		resp.Status = vcomError.InternalError
+		resp.Detail = vcomError.MessageUnknownError
+		return ctx.JSON(http.StatusInternalServerError, resp)
 	}
 	src, err := file.Open()
 	if err != nil {
 		log.Error("File Open failed. err: ", err)
-		return err
+		resp.Status = vcomError.InternalError
+		resp.Detail = vcomError.MessageUnknownError
+		return ctx.JSON(http.StatusInternalServerError, resp)
 	}
 	defer src.Close()
 
@@ -143,13 +147,17 @@ func registerUser(ctx echo.Context) error {
 	dst, err := os.Create(filePath) // TODO s3 나 특정 위치로 파일을 옮길 수 있어야 함.
 	if err != nil {
 		log.Error("File Create failed. err: ", err)
-		return err
+		resp.Status = vcomError.InternalError
+		resp.Detail = vcomError.MessageUnknownError
+		return ctx.JSON(http.StatusInternalServerError, resp)
 	}
 	defer dst.Close()
 	// Copy
 	if _, err = io.Copy(dst, src); err != nil {
 		log.Error("File Copy failed. err: ", err)
-		return err
+		resp.Status = vcomError.InternalError
+		resp.Detail = vcomError.MessageUnknownError
+		return ctx.JSON(http.StatusInternalServerError, resp)
 	}
 
 	profileImagePath := "/asset/profile/" + uniqueId + ext
