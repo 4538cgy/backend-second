@@ -9,8 +9,6 @@ import (
 	vcomError "github.com/4538cgy/backend-second/error"
 	"github.com/4538cgy/backend-second/log"
 	"github.com/4538cgy/backend-second/protocol"
-	"github.com/4538cgy/backend-second/query"
-	"github.com/4538cgy/backend-second/util"
 	"github.com/labstack/echo/v4"
 	"net/http"
 	"time"
@@ -266,38 +264,13 @@ func login(ctx echo.Context) error {
 		return ctx.JSON(http.StatusInternalServerError, resp)
 	}
 
+	serverSessionToken, err := customContext.InsertSession(uid, timer)
+	if err != nil {
+		// TODO rollback 해야하는지 여부 확인
+		resp.Status = vcomError.SessionInsertionFailed
+		resp.Detail = vcomError.MessageIOFailed
+	}
 	log.Info("Already registered user.")
-	serverSessionToken := util.RandString()
-	values := []interface{}{
-		serverSessionToken,
-		uid,
-	}
-	resultCh := make(chan database.CudQueryResult)
-	select {
-	case customContext.InsertQueryWritePump() <- database.NewCudTransaction(query.InsertSession, values, resultCh):
-	case <-timer.C:
-		log.Error("failed to exec query")
-		resp.Status = vcomError.ApiOperationRequestTimeout
-		resp.Detail = vcomError.MessageOperationTimeout
-		return ctx.JSON(http.StatusInternalServerError, resp)
-	}
-
-	select {
-	case res := <-resultCh:
-		if res.Err != nil {
-			log.Error("database operation failed.")
-			resp.Status = vcomError.DatabaseOperationError
-			resp.Detail = res.Err.Error()
-			return ctx.JSON(http.StatusInternalServerError, resp)
-		}
-
-	case <-timer.C:
-		// TODO rollback needed
-		log.Error("database operation timeout.")
-		resp.Status = vcomError.ApiOperationResponseTimeout
-		resp.Detail = vcomError.MessageOperationTimeout
-		return ctx.JSON(http.StatusInternalServerError, resp)
-	}
 	resp.SessionToken = serverSessionToken
 	resp.Status = vcomError.QueryResultOk
 	return ctx.JSON(http.StatusOK, resp)

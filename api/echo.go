@@ -8,6 +8,7 @@ import (
 	"github.com/4538cgy/backend-second/api/route"
 	_ "github.com/4538cgy/backend-second/api/sale"
 	_ "github.com/4538cgy/backend-second/api/seller"
+	"github.com/4538cgy/backend-second/api/session"
 	_ "github.com/4538cgy/backend-second/api/user"
 	"github.com/4538cgy/backend-second/config"
 	"github.com/4538cgy/backend-second/database"
@@ -17,10 +18,11 @@ import (
 )
 
 type apiManager struct {
-	echo      *echo.Echo
-	config    *config.Config
-	dbManager database.Manager
-	fbManager firebase.Firebase
+	echo           *echo.Echo
+	config         *config.Config
+	dbManager      database.Manager
+	fbManager      firebase.Firebase
+	sessionHandler session.Handler
 }
 
 func StartAPI(cfg *config.Config, dbManager database.Manager) {
@@ -29,11 +31,14 @@ func StartAPI(cfg *config.Config, dbManager database.Manager) {
 		log.Fatal("firebase manager create failed!!! ", err.Error())
 	}
 
+	sessionHandler := session.NewSessionHandler(dbManager)
+
 	api := &apiManager{
-		echo:      echo.New(),
-		config:    cfg,
-		dbManager: dbManager,
-		fbManager: fbManager,
+		echo:           echo.New(),
+		config:         cfg,
+		dbManager:      dbManager,
+		fbManager:      fbManager,
+		sessionHandler: sessionHandler,
 	}
 
 	api.echo.Use(func(next echo.HandlerFunc) echo.HandlerFunc {
@@ -42,6 +47,7 @@ func StartAPI(cfg *config.Config, dbManager database.Manager) {
 				Context:  c,
 				Manager:  dbManager,
 				Firebase: fbManager,
+				Handler:  sessionHandler,
 			}
 			return next(cc)
 		}
