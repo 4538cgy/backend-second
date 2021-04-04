@@ -63,21 +63,6 @@ type RegisterUserRequest struct {
 	Meta            string `json:"meta_json"`         // meta json field
 }
 
-// formValue
-type SellerAuthRequest struct {
-	UniqueId                  string // `unique_id`: firebase token id 혹은 email address
-	Token                     string // `token`: login 혹은 user 등록 요청의 응답으로 받은 토큰.
-	SellerType                int    // `seller_type`: 개인회원 0, 기업회원 1
-	CompanyRegistrationNumber string // `company_registration_number`: 사업자 등록번호.
-	CompanyOwnerName          string // `owner_name`: 사업주 이름
-	CompanyName               string // `company_name`: 기업체 이름
-	ChannelName               string // `channel_name`: 채널 이름
-	ChannelUrl                string // `channel_url`: 채널 url
-	ChannelDescription        string // `channel_description`: 채널 설명
-	BankName                  string // `bank_name`: 은행 이름
-	BankAccountNumber         string // `bank_account_number`: 계좌번호
-}
-
 type SellerAuthResponse struct {
 	BaseResponse
 }

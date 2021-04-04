@@ -13,7 +13,7 @@ const (
 	MessageQueryParamNotfound = "no query param"
 	MessageBindFailed         = "bind failed"
 	MessageUserNotRegistered  = "not registered user"
-	MessageFileIoFailed       = "I/O failed"
+	MessageIOFailed           = "I/O failed"
 )
 
 // Response status detail code
@@ -29,6 +29,8 @@ const (
 	// login or create account
 	InvalidAuthType = 5
 	UserNotFound    = 6
+
+	SessionInsertionFailed = 100
 
 	ApiOperationRequestTimeout  = 300
 	ApiOperationResponseTimeout = 301

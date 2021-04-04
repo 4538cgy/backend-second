@@ -82,7 +82,7 @@ func postReview(ctx echo.Context) error {
 		// Copy
 		if _, err = io.Copy(dst, src); err != nil {
 			resp.Status = vcomError.InternalError
-			resp.Detail = vcomError.MessageFileIoFailed
+			resp.Detail = vcomError.MessageIOFailed
 			return ctx.JSON(http.StatusInternalServerError, resp)
 		}
 		id := util.RandString()
