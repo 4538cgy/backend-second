@@ -44,13 +44,21 @@ func registerUser(ctx echo.Context) error {
 		return ctx.JSON(http.StatusInternalServerError, resp)
 	}
 
-	uniqueId := ctx.FormValue("unique_id")
+	idToken := ctx.FormValue("firebase_id_token")
 	userId := ctx.FormValue("user_id")
 	emailAddress := ctx.FormValue("email")
 	cellPhoneNumber := ctx.FormValue("cell_phone_number")
 	dayOfBirth := ctx.FormValue("day_of_birth")
-	auth := ctx.FormValue("auth")
 	meta := ctx.FormValue("meta")
+
+	uniqueId, err := customContext.VerifyIDToken(idToken)
+	if err != nil {
+		msg := fmt.Sprintf("firebase verify failed. %s", err)
+		resp.Status = vcomError.FirebaseVerifyTokenFailed
+		resp.Detail = msg
+		return ctx.JSON(http.StatusInternalServerError, resp)
+	}
+
 	timer := time.NewTimer(time.Duration(config.Get().Api.HandleTimeoutMS) * time.Second)
 	defer timer.Stop()
 
@@ -155,7 +163,6 @@ func registerUser(ctx echo.Context) error {
 		cellPhoneNumber,
 		profileImagePath,
 		emailAddress,
-		auth,
 		meta,
 	}
 

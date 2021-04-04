@@ -4,7 +4,7 @@ const InsertSession = "INSERT INTO vcommerce.session(`token`, `unique_id`, `crea
 
 const InsertEmail = "INSERT INTO vcommerce.emails(`email`, `created`) VALUES (?, now())"
 const InsertUserID = "INSERT INTO vcommerce.userids(`user_id`, `created`) VALUES (?, now())"
-const InsertUser = "INSERT INTO vcommerce.user(`unique_id`, `user_id`, `day_of_birth`, `cell_phone_number`, `profile_image`, `email`, `auth`, `meta_json`, `created`, `updated`) VALUES (?, ?, ?, ?, ?, ?, ?, ?, now(), now())"
+const InsertUser = "INSERT INTO vcommerce.user(`unique_id`, `user_id`, `day_of_birth`, `cell_phone_number`, `profile_image`, `email`, `meta_json`, `created`, `updated`) VALUES (?, ?, ?, ?, ?, ?, ?, now(), now())"
 
 const InsertSellerAuth = "INSERT INTO vcommerce.seller(`unique_id`, `seller_type`, `company_registration_number`, `owner_name`, `company_name`, `channel_name`, `channel_url`, `channel_description`, `bank_name`, `bank_account_number`, `uploaded_file_path`, `created`, `updated`) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, now(), now())"
 const InsertSellerChannel = "INSERT INTO vcommerce.seller_channel(`channel_name`, `created`) VALUES (?, now())"

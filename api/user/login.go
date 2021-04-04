@@ -1,7 +1,6 @@
 package user
 
 import (
-	context2 "context"
 	"fmt"
 	"github.com/4538cgy/backend-second/api/context"
 	"github.com/4538cgy/backend-second/api/route"
@@ -103,19 +102,9 @@ func loginForNonFirebase(ctx echo.Context) error {
 		resp.Status = vcomError.QueryResultOk
 		return ctx.JSON(http.StatusOK, resp)
 	}
-
-	client, err := customContext.App().Auth(context2.Background())
+	token, err := customContext.CreateCustomToken(nonFirebaseLoginRequest.UniqueId)
 	if err != nil {
-		msg := fmt.Sprintf("firebase auth failed. %s", err)
-		resp.Status = vcomError.FirebaseTokenCreateFailed
-		resp.Detail = msg
-		return ctx.JSON(http.StatusInternalServerError, resp)
-	}
-
-	ctx2 := context2.Background()
-	token, err := client.CustomToken(ctx2, nonFirebaseLoginRequest.UniqueId)
-	if err != nil {
-		msg := fmt.Sprintf("firebase customToken get failed. %s", err)
+		msg := fmt.Sprintf("firebase customtoken failed. %s", err)
 		resp.Status = vcomError.FirebaseTokenCreateFailed
 		resp.Detail = msg
 		return ctx.JSON(http.StatusInternalServerError, resp)
@@ -146,17 +135,9 @@ func loginForFirebase(ctx echo.Context) error {
 		return ctx.JSON(http.StatusInternalServerError, resp)
 	}
 
-	client, err := customContext.App().Auth(context2.Background())
+	uid, err := customContext.VerifyIDToken(firebaseLoginRequest.IdToken)
 	if err != nil {
-		msg := fmt.Sprintf("firebase auth failed. %s", err)
-		resp.Status = vcomError.FirebaseAuthFailed
-		resp.Detail = msg
-		return ctx.JSON(http.StatusInternalServerError, resp)
-	}
-
-	token, err := client.VerifyIDToken(context2.Background(), firebaseLoginRequest.IdToken)
-	if err != nil {
-		msg := fmt.Sprintf("firebase auth failed. %s", err)
+		msg := fmt.Sprintf("firebase verify failed. %s", err)
 		resp.Status = vcomError.FirebaseVerifyTokenFailed
 		resp.Detail = msg
 		return ctx.JSON(http.StatusInternalServerError, resp)
@@ -170,7 +151,7 @@ func loginForFirebase(ctx echo.Context) error {
 	result := make(chan database.SelectQueryResult)
 	select {
 	case customContext.SelectQueryWritePump() <- database.NewSelectTransaction(
-		fmt.Sprintf("SELECT user_id FROM vcommerce.user WHERE user_id='%s'", token.UID),
+		fmt.Sprintf("SELECT user_id FROM vcommerce.user WHERE user_id='%s'", uid),
 		result,
 	):
 	case <-timer.C:
@@ -229,18 +210,17 @@ func login(ctx echo.Context) error {
 		return ctx.JSON(http.StatusInternalServerError, resp)
 	}
 
-	client, err := customContext.App().Auth(context2.Background())
+	uid, userEmail, err := customContext.GetUserEmail(loginRequest.IdToken)
 	if err != nil {
-		msg := fmt.Sprintf("firebase auth failed. %s", err)
-		resp.Status = vcomError.FirebaseAuthFailed
+		msg := fmt.Sprintf("firebase GetUserInfo failed. err: %s", err)
+		resp.Status = vcomError.FirebaseUserInfoFailed
 		resp.Detail = msg
 		return ctx.JSON(http.StatusInternalServerError, resp)
 	}
 
-	token, err := client.VerifyIDToken(context2.Background(), loginRequest.IdToken)
-	if err != nil {
-		msg := fmt.Sprintf("firebase auth failed. %s", err)
-		resp.Status = vcomError.FirebaseVerifyTokenFailed
+	if userEmail != loginRequest.EmailAddress {
+		msg := fmt.Sprintf("firebase Validation failed. err: %s", err)
+		resp.Status = vcomError.FirebaseUserInfoFailed
 		resp.Detail = msg
 		return ctx.JSON(http.StatusInternalServerError, resp)
 	}
@@ -253,7 +233,7 @@ func login(ctx echo.Context) error {
 	result := make(chan database.SelectQueryResult)
 	select {
 	case customContext.SelectQueryWritePump() <- database.NewSelectTransaction(
-		fmt.Sprintf("SELECT user_id FROM vcommerce.user WHERE user_id='%s'", token.UID),
+		fmt.Sprintf("SELECT user_id FROM vcommerce.user WHERE user_id='%s'", uid),
 		result,
 	):
 	case <-timer.C:
@@ -290,7 +270,7 @@ func login(ctx echo.Context) error {
 	serverSessionToken := util.RandString()
 	values := []interface{}{
 		serverSessionToken,
-		token.UID,
+		uid,
 	}
 	resultCh := make(chan database.CudQueryResult)
 	select {

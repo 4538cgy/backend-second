@@ -39,11 +39,11 @@ type FirebaseAuthRequest struct {
 type FirebaseAuthResponse struct {
 	BaseResponse
 	SignedIn bool `json:"signed_in"` // 이미 가입된 사용자여부
-
 }
 
 type LoginRequest struct {
-	IdToken string `json:"firebase_id_token"` // id token
+	IdToken      string `json:"firebase_id_token"` // id token
+	EmailAddress string `json:"email"`             // email 주소
 }
 
 type LoginResponse struct {
