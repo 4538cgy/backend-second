@@ -35,6 +35,7 @@ type UserIdCheckResponse struct {
 }
 
 type LoginRequest struct {
+	Token    string `json:"token"`     // JWT Token
 	UniqueId string `json:"unique_id"` // firebase token id 혹은 email address
 	Password string `json:"password"`  // md5 로 인코딩된 비밀번호. firebase token 인 경우 무시
 	AuthType string `json:"auth"`      // 인증방법. google|apple|kakao|email

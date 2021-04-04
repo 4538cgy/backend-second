@@ -1,16 +1,5 @@
 package auth
 
-import (
-	"encoding/json"
-	"fmt"
-	"github.com/4538cgy/backend-second/api/route"
-	"github.com/labstack/echo/v4"
-	"io/ioutil"
-	"net/http"
-	"net/url"
-	"strings"
-)
-
 const (
 	kakaoTokenAddress      = "https://kauth.kakao.com/oauth/token"
 	kakaoAuthCodeParamName = "code"
@@ -29,9 +18,10 @@ type KakaoTokenInfo struct {
 }
 
 func init() {
-	route.AddRoute(route.NewRouteType(kakaoAuthUri, "GET"), login)
+	//route.AddRoute(route.NewRouteType(kakaoAuthUri, "GET"), login)
 }
 
+/*
 func login(ctx echo.Context) error {
 	auth := ctx.QueryParam(kakaoAuthCodeParamName)
 	form := url.Values{}
@@ -81,3 +71,5 @@ func login(ctx echo.Context) error {
 	}()
 	return ctx.String(http.StatusOK, string(body))
 }
+
+*/

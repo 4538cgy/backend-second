@@ -2,7 +2,9 @@ package api
 
 import (
 	"fmt"
+	_ "github.com/4538cgy/backend-second/api/auth"
 	"github.com/4538cgy/backend-second/api/context"
+	"github.com/4538cgy/backend-second/api/firebase"
 	"github.com/4538cgy/backend-second/api/route"
 	_ "github.com/4538cgy/backend-second/api/sale"
 	_ "github.com/4538cgy/backend-second/api/seller"
@@ -18,20 +20,28 @@ type apiManager struct {
 	echo      *echo.Echo
 	config    *config.Config
 	dbManager database.Manager
+	fbManager firebase.Firebase
 }
 
 func StartAPI(cfg *config.Config, dbManager database.Manager) {
+	fbManager, err := firebase.NewManager(cfg)
+	if err != nil {
+		log.Fatal("firebase manager create failed!!! ", err.Error())
+	}
+
 	api := &apiManager{
 		echo:      echo.New(),
 		config:    cfg,
 		dbManager: dbManager,
+		fbManager: fbManager,
 	}
 
 	api.echo.Use(func(next echo.HandlerFunc) echo.HandlerFunc {
 		return func(c echo.Context) error {
 			cc := &context.CustomContext{
-				Context: c,
-				Manager: dbManager,
+				Context:  c,
+				Manager:  dbManager,
+				Firebase: fbManager,
 			}
 			return next(cc)
 		}

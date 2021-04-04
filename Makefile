@@ -4,6 +4,7 @@ GOTEST=go test
 INSTALL_DIR=/vcom/backend/api
 LOG_DIR=/vcom/backend/api/log
 CONF_FILE=config.toml
+FIREBASE_SERVICE_ACCOUNT_KEY=firebase_adminsdk.json
 
 BINARY_NAME=vcom_api
 
@@ -26,3 +27,4 @@ clean:
 		rm -f $(BINARY_NAME)
 configs:
 		sudo cp -f $(CONF_FILE) $(INSTALL_DIR)/$(CONF_FILE)
+		sudo cp -f $(FIREBASE_SERVICE_ACCOUNT_KEY) $(INSTALL_DIR)/$(FIREBASE_SERVICE_ACCOUNT_KEY)

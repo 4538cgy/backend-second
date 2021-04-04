@@ -22,7 +22,7 @@ var Warningf = logrus.Warningf
 var Error = logrus.Error
 var Errorf = logrus.Errorf
 var Fatal = logrus.Fatal
-var Faltalf = logrus.Fatalf
+var Fatalf = logrus.Fatalf
 var Panic = logrus.Panic
 var Panicf = logrus.Panicf
 

@@ -18,10 +18,13 @@ sellerUploadFilePath = "/vcom/backend/api/download"
 [asset]
 userProfileImageSavePath = "/vcom/backend/asset/profile"
 
+[firebase]
+serviceAccountKeyPath = "/vcom/backend/api/firebase_adminsdk.json"
+
 [log]
-stdOut = true
+stdOut = false
 enable = true
 level = "DEBUG"
-filename = "/vcom/backend-second/log/vcommerce.log"
+filename = "/vcom/backend/api/log/vcommerce.log"
 maxSize = 100
 maxAge = 7

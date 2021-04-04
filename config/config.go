@@ -40,12 +40,17 @@ type Asset struct {
 	UserProfileImageSavePath string
 }
 
+type Firebase struct {
+	ServiceAccountKeyPath string
+}
+
 type Config struct {
 	Log       LogConfig `toml:"log"`
 	Database  Database  `toml:"database"`
 	Echo      Echo      `toml:"echo"`
 	Api       Api       `toml:"api"`
 	Asset     Asset     `toml:"asset"`
+	Firebase  Firebase  `toml:"firebase"`
 	LogConfig lumberjack.Logger
 }
 
