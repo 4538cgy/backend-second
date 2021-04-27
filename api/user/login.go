@@ -67,7 +67,7 @@ func loginForNonFirebase(ctx echo.Context) error {
 	result := make(chan database.SelectQueryResult)
 	select {
 	case customContext.SelectQueryWritePump() <- database.NewSelectTransaction(
-		fmt.Sprintf("SELECT user_id FROM vcommerce.user WHERE user_id='%s'", nonFirebaseLoginRequest.UniqueId),
+		fmt.Sprintf("SELECT email FROM vcommerce.user WHERE user_id='%s'", nonFirebaseLoginRequest.UniqueId),
 		result,
 	):
 	case <-timer.C:
@@ -77,6 +77,7 @@ func loginForNonFirebase(ctx echo.Context) error {
 	}
 
 	signedInUser := false
+	var email string
 	// receive result
 	select {
 	case res := <-result:
@@ -87,6 +88,7 @@ func loginForNonFirebase(ctx echo.Context) error {
 		}
 		if res.Rows.Next() {
 			signedInUser = true
+			res.Rows.Scan(&email)
 		}
 	case <-timer.C:
 		resp.Status = vcomError.ApiOperationResponseTimeout
@@ -98,6 +100,7 @@ func loginForNonFirebase(ctx echo.Context) error {
 		log.Info("Already registered user.")
 		resp.SignedIn = true
 		resp.Status = vcomError.QueryResultOk
+		resp.Email = email
 		return ctx.JSON(http.StatusOK, resp)
 	}
 	token, err := customContext.CreateCustomToken(nonFirebaseLoginRequest.UniqueId)
@@ -149,7 +152,7 @@ func loginForFirebase(ctx echo.Context) error {
 	result := make(chan database.SelectQueryResult)
 	select {
 	case customContext.SelectQueryWritePump() <- database.NewSelectTransaction(
-		fmt.Sprintf("SELECT user_id FROM vcommerce.user WHERE user_id='%s'", uid),
+		fmt.Sprintf("SELECT email FROM vcommerce.user WHERE user_id='%s'", uid),
 		result,
 	):
 	case <-timer.C:
@@ -159,6 +162,7 @@ func loginForFirebase(ctx echo.Context) error {
 	}
 
 	signedInUser := false
+	var email string
 	// receive result
 	select {
 	case res := <-result:
@@ -169,10 +173,12 @@ func loginForFirebase(ctx echo.Context) error {
 		}
 		if res.Rows.Next() {
 			signedInUser = true
+			res.Rows.Scan(&email)
 		}
 	case <-timer.C:
 		resp.Status = vcomError.ApiOperationResponseTimeout
 		resp.Detail = vcomError.MessageOperationTimeout
+		resp.Email = email
 		return ctx.JSON(http.StatusInternalServerError, resp)
 	}
 
