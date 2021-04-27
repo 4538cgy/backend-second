@@ -30,6 +30,7 @@ type NonFirebaseAuthResponse struct {
 	BaseResponse
 	SignedIn    bool   `json:"signed_in"`    // 이미 가입된 사용자여부
 	CustomToken string `json:"custom_token"` // firebase auth를 위한 custom token 값
+	Email       string `json:"email"`        // 가입시 사용한 email
 }
 
 type FirebaseAuthRequest struct {
@@ -38,7 +39,8 @@ type FirebaseAuthRequest struct {
 
 type FirebaseAuthResponse struct {
 	BaseResponse
-	SignedIn bool `json:"signed_in"` // 이미 가입된 사용자여부
+	SignedIn bool   `json:"signed_in"` // 이미 가입된 사용자여부
+	Email    string `json:"email"`     // 가입시 사용한 email
 }
 
 type LoginRequest struct {
