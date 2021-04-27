@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/4538cgy/backend-second/api/context"
 	"github.com/4538cgy/backend-second/api/route"
+	_ "github.com/4538cgy/backend-second/api/session"
 	"github.com/4538cgy/backend-second/config"
 	"github.com/4538cgy/backend-second/database"
 	vcomError "github.com/4538cgy/backend-second/error"
@@ -44,24 +45,23 @@ func authSeller(ctx echo.Context) error {
 	}
 
 	var err error
-	authSellerRequest := &protocol.SellerAuthRequest{}
-	authSellerRequest.UniqueId = ctx.FormValue("unique_id")
-	authSellerRequest.Token = ctx.FormValue("token")
-	authSellerRequest.SellerType, err = strconv.Atoi(ctx.FormValue("seller_type"))
+	uniqueId := ctx.FormValue("unique_id")
+	// token := ctx.FormValue("token") // TODO verification
+	sellerType, err := strconv.Atoi(ctx.FormValue("seller_type"))
 	if err != nil {
 		log.Error("failed to bind register user request")
 		resp.Status = vcomError.InternalError
 		resp.Detail = vcomError.MessageBindFailed
 		return ctx.JSON(http.StatusInternalServerError, resp)
 	}
-	authSellerRequest.CompanyRegistrationNumber = ctx.FormValue("company_registration_number")
-	authSellerRequest.CompanyOwnerName = ctx.FormValue("owner_name")
-	authSellerRequest.CompanyName = ctx.FormValue("company_name")
-	authSellerRequest.ChannelName = ctx.FormValue("channel_name")
-	authSellerRequest.ChannelUrl = ctx.FormValue("channel_url")
-	authSellerRequest.ChannelDescription = ctx.FormValue("channel_description")
-	authSellerRequest.BankName = ctx.FormValue("bank_name")
-	authSellerRequest.BankAccountNumber = ctx.FormValue("bank_account_number")
+	companyRegistrationNumber := ctx.FormValue("company_registration_number")
+	companyOwnerName := ctx.FormValue("owner_name")
+	companyName := ctx.FormValue("company_name")
+	channelName := ctx.FormValue("channel_name")
+	channelUrl := ctx.FormValue("channel_url")
+	channelDescription := ctx.FormValue("channel_description")
+	bankName := ctx.FormValue("bank_name")
+	bankAccountNumber := ctx.FormValue("bank_account_number")
 	file, err := ctx.FormFile("file")
 	if err != nil {
 		return err
@@ -72,7 +72,7 @@ func authSeller(ctx echo.Context) error {
 	}
 	defer src.Close()
 
-	filePath := fmt.Sprintf(config.Get().Api.SellerUploadFilePath + "/" + authSellerRequest.UniqueId + ".pdf")
+	filePath := fmt.Sprintf(config.Get().Api.SellerUploadFilePath + "/" + uniqueId + ".pdf")
 	// Destination
 	dst, err := os.Create(filePath) // TODO s3 나 특정 위치로 파일을 옮길 수 있어야 함.
 	if err != nil {
@@ -91,7 +91,7 @@ func authSeller(ctx echo.Context) error {
 	// channel registration first
 	resultCh := make(chan database.CudQueryResult)
 	values := []interface{}{
-		authSellerRequest.ChannelName,
+		channelName,
 	}
 	select {
 	case customContext.InsertQueryWritePump() <- database.NewCudTransaction(query.InsertSellerChannel, values, resultCh):
@@ -122,11 +122,11 @@ func authSeller(ctx echo.Context) error {
 	// channel registration
 	resultCh = make(chan database.CudQueryResult)
 	authProgress := sellerWaitAuthentication
-	if authSellerRequest.SellerType == 0 {
+	if sellerType == 0 {
 		authProgress = sellerAuthenticated
 	}
 	values = []interface{}{
-		authSellerRequest.UniqueId,
+		uniqueId,
 		authProgress,
 	}
 
@@ -161,16 +161,16 @@ func authSeller(ctx echo.Context) error {
 	// channel auth
 	resultCh = make(chan database.CudQueryResult)
 	values = []interface{}{
-		authSellerRequest.UniqueId,
-		authSellerRequest.SellerType,
-		authSellerRequest.CompanyRegistrationNumber,
-		authSellerRequest.CompanyOwnerName,
-		authSellerRequest.CompanyName,
-		authSellerRequest.ChannelName,
-		authSellerRequest.ChannelUrl,
-		authSellerRequest.ChannelDescription,
-		authSellerRequest.BankName,
-		authSellerRequest.BankAccountNumber,
+		uniqueId,
+		sellerType,
+		companyRegistrationNumber,
+		companyOwnerName,
+		companyName,
+		channelName,
+		channelUrl,
+		channelDescription,
+		bankName,
+		bankAccountNumber,
 		filePath,
 	}
 

@@ -18,11 +18,11 @@ import (
 )
 
 type apiManager struct {
-	echo           *echo.Echo
-	config         *config.Config
-	dbManager      database.Manager
-	fbManager      firebase.Firebase
-	sessionHandler session.Handler
+	echo        *echo.Echo
+	config      *config.Config
+	dbManager   database.Manager
+	fbManager   firebase.Firebase
+	sessManager session.Session
 }
 
 func StartAPI(cfg *config.Config, dbManager database.Manager) {
@@ -34,11 +34,11 @@ func StartAPI(cfg *config.Config, dbManager database.Manager) {
 	sessionHandler := session.NewSessionHandler(dbManager)
 
 	api := &apiManager{
-		echo:           echo.New(),
-		config:         cfg,
-		dbManager:      dbManager,
-		fbManager:      fbManager,
-		sessionHandler: sessionHandler,
+		echo:        echo.New(),
+		config:      cfg,
+		dbManager:   dbManager,
+		fbManager:   fbManager,
+		sessManager: sessionHandler,
 	}
 
 	api.echo.Use(func(next echo.HandlerFunc) echo.HandlerFunc {
@@ -47,7 +47,7 @@ func StartAPI(cfg *config.Config, dbManager database.Manager) {
 				Context:  c,
 				Manager:  dbManager,
 				Firebase: fbManager,
-				Handler:  sessionHandler,
+				Session:  sessionHandler,
 			}
 			return next(cc)
 		}

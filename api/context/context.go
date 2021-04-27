@@ -11,5 +11,5 @@ type CustomContext struct {
 	echo.Context
 	database.Manager
 	firebase.Firebase
-	session.Handler
+	session.Session
 }

@@ -10,7 +10,7 @@ import (
 	"time"
 )
 
-type Handler interface {
+type Session interface {
 	InitHandler() error
 	InsertSession(uid string, timer *time.Timer) (string, error)            // sessionToken, error
 	ValidateSession(sessionToken string, timer *time.Timer) (string, error) // unique_id, error
@@ -21,7 +21,7 @@ type sessionHandler struct {
 	dbManager database.Manager
 }
 
-func NewSessionHandler(dbManager database.Manager) Handler {
+func NewSessionHandler(dbManager database.Manager) Session {
 	return &sessionHandler{
 		dbManager: dbManager,
 	}
